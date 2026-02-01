@@ -52,12 +52,21 @@ def handler(event: dict, context) -> dict:
             total_price = body.get('totalPrice')
             server_name = body.get('serverName')
             game_type = body.get('gameType', 'SAMP')
+            user_id = body.get('userId')
             
-            if not all([customer_name, customer_email, plan_type, slots, days, total_price, server_name]):
+            if not all([customer_name, customer_email, plan_type, slots, days, server_name]):
                 return {
                     'statusCode': 400,
                     'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
                     'body': json.dumps({'error': 'Missing required fields'}),
+                    'isBase64Encoded': False
+                }
+            
+            if total_price is None or total_price < 0:
+                return {
+                    'statusCode': 400,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Invalid price'}),
                     'isBase64Encoded': False
                 }
             
@@ -66,12 +75,12 @@ def handler(event: dict, context) -> dict:
             cursor.execute("""
                 INSERT INTO orders 
                 (customer_name, customer_email, customer_phone, plan_type, slots, days, 
-                 total_price, server_name, game_type, status, expires_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'pending', %s)
+                 total_price, server_name, game_type, status, expires_at, user_id)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'pending', %s, %s)
                 RETURNING id, customer_name, customer_email, plan_type, slots, days, 
-                          total_price, server_name, game_type, status, created_at, expires_at
+                          total_price, server_name, game_type, status, created_at, expires_at, user_id
             """, (customer_name, customer_email, customer_phone, plan_type, slots, days,
-                  total_price, server_name, game_type, expires_at))
+                  total_price, server_name, game_type, expires_at, user_id))
             
             order = dict(cursor.fetchone())
             

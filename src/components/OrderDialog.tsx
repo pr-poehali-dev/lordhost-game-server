@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface OrderDialogProps {
   open: boolean;
@@ -17,6 +18,7 @@ interface OrderDialogProps {
 
 const OrderDialog = ({ open, onOpenChange, planType, basePrice }: OrderDialogProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [slots, setSlots] = useState(10);
   const [days, setDays] = useState(30);
   const [gameType, setGameType] = useState('SAMP');
@@ -27,6 +29,14 @@ const OrderDialog = ({ open, onOpenChange, planType, basePrice }: OrderDialogPro
   const [isLoading, setIsLoading] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [serverData, setServerData] = useState<any>(null);
+
+  useEffect(() => {
+    if (user) {
+      setCustomerName(user.full_name);
+      setCustomerEmail(user.email);
+      setCustomerPhone(user.phone || '');
+    }
+  }, [user]);
 
   const maxSlots = planType === 'Free' ? 10 : planType === 'Pro' ? 50 : 200;
   const pricePerSlot = planType === 'Free' ? 0 : planType === 'Pro' ? 5 : 3;
@@ -63,7 +73,8 @@ const OrderDialog = ({ open, onOpenChange, planType, basePrice }: OrderDialogPro
           days,
           totalPrice,
           serverName,
-          gameType
+          gameType,
+          userId: user?.id || null
         })
       });
 

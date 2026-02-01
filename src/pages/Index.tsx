@@ -1,13 +1,18 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import Icon from '@/components/ui/icon';
 import OrderDialog from '@/components/OrderDialog';
+import AuthDialog from '@/components/AuthDialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
+  const { user, logout, isAuthenticated } = useAuth();
   const [activeSection, setActiveSection] = useState('home');
   const [orderDialogOpen, setOrderDialogOpen] = useState(false);
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState({ type: 'Free', price: 0 });
 
   const plans = [
@@ -64,6 +69,93 @@ const Index = () => {
     { id: 'support', label: 'Поддержка', icon: 'Headphones' }
   ];
 
+  const DashboardComponent = lazy(() => import('./Dashboard'));
+
+  if (activeSection === 'panel' && isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background">
+        <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
+          <div className="container mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3" onClick={() => setActiveSection('home')} className="cursor-pointer">
+                <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center glow-purple">
+                  <Icon name="Server" size={24} className="text-background" />
+                </div>
+                <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  LordHost
+                </span>
+              </div>
+              
+              <div className="hidden md:flex items-center gap-1">
+                {navigation.map((item) => (
+                  <Button
+                    key={item.id}
+                    variant={activeSection === item.id ? 'default' : 'ghost'}
+                    onClick={() => setActiveSection(item.id)}
+                    className="gap-2"
+                  >
+                    <Icon name={item.icon} size={18} />
+                    {item.label}
+                  </Button>
+                ))}
+              </div>
+
+              {isAuthenticated ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button className="bg-primary hover:bg-primary/90 glow-purple">
+                      <Icon name="User" size={18} className="mr-2" />
+                      {user?.full_name}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setActiveSection('panel')}>
+                      <Icon name="LayoutDashboard" size={16} className="mr-2" />
+                      Мои серверы
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={logout}>
+                      <Icon name="LogOut" size={16} className="mr-2" />
+                      Выйти
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button 
+                  className="bg-primary hover:bg-primary/90 glow-purple"
+                  onClick={() => setAuthDialogOpen(true)}
+                >
+                  <Icon name="LogIn" size={18} className="mr-2" />
+                  Войти
+                </Button>
+              )}
+            </div>
+          </div>
+        </nav>
+        <div className="pt-20">
+          <Suspense fallback={
+            <div className="container mx-auto px-6 py-20">
+              <div className="flex items-center justify-center min-h-[400px]">
+                <Icon name="Loader2" size={48} className="animate-spin text-primary" />
+              </div>
+            </div>
+          }>
+            <DashboardComponent />
+          </Suspense>
+        </div>
+        <OrderDialog
+          open={orderDialogOpen}
+          onOpenChange={setOrderDialogOpen}
+          planType={selectedPlan.type}
+          basePrice={selectedPlan.price}
+        />
+        <AuthDialog
+          open={authDialogOpen}
+          onOpenChange={setAuthDialogOpen}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
@@ -92,10 +184,34 @@ const Index = () => {
               ))}
             </div>
 
-            <Button className="bg-primary hover:bg-primary/90 glow-purple">
-              <Icon name="LogIn" size={18} className="mr-2" />
-              Войти
-            </Button>
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="bg-primary hover:bg-primary/90 glow-purple">
+                    <Icon name="User" size={18} className="mr-2" />
+                    {user?.full_name}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setActiveSection('panel')}>
+                    <Icon name="LayoutDashboard" size={16} className="mr-2" />
+                    Мои серверы
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout}>
+                    <Icon name="LogOut" size={16} className="mr-2" />
+                    Выйти
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button 
+                className="bg-primary hover:bg-primary/90 glow-purple"
+                onClick={() => setAuthDialogOpen(true)}
+              >
+                <Icon name="LogIn" size={18} className="mr-2" />
+                Войти
+              </Button>
+            )}
           </div>
         </div>
       </nav>
@@ -340,6 +456,11 @@ const Index = () => {
         onOpenChange={setOrderDialogOpen}
         planType={selectedPlan.type}
         basePrice={selectedPlan.price}
+      />
+
+      <AuthDialog
+        open={authDialogOpen}
+        onOpenChange={setAuthDialogOpen}
       />
     </div>
   );
