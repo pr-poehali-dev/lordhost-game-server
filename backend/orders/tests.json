@@ -1,0 +1,38 @@
+{
+  "tests": [
+    {
+      "name": "Create new server order",
+      "method": "POST",
+      "body": {
+        "customerName": "Test User",
+        "customerEmail": "test@example.com",
+        "customerPhone": "+79991234567",
+        "planType": "Pro",
+        "slots": 30,
+        "days": 30,
+        "totalPrice": 299,
+        "serverName": "TestServer",
+        "gameType": "SAMP"
+      },
+      "expectedStatus": 201,
+      "expectedBody": {
+        "success": true,
+        "message": "string",
+        "order": {
+          "id": "number",
+          "customer_email": "string"
+        }
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get orders list",
+      "method": "GET",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "orders": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

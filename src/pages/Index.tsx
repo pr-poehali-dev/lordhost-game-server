@@ -3,9 +3,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
+import OrderDialog from '@/components/OrderDialog';
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState('home');
+  const [orderDialogOpen, setOrderDialogOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState({ type: 'Free', price: 0 });
 
   const plans = [
     {
@@ -114,13 +117,28 @@ const Index = () => {
               автоустановка и профессиональная поддержка 24/7
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 glow-purple text-lg px-8">
+              <Button 
+                size="lg" 
+                className="bg-primary hover:bg-primary/90 glow-purple text-lg px-8"
+                onClick={() => {
+                  setSelectedPlan({ type: 'Free', price: 0 });
+                  setOrderDialogOpen(true);
+                }}
+              >
                 <Icon name="Rocket" size={20} className="mr-2" />
                 Начать бесплатно
               </Button>
-              <Button size="lg" variant="outline" className="text-lg px-8">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="text-lg px-8"
+                onClick={() => {
+                  const pricingSection = document.getElementById('pricing-section');
+                  pricingSection?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
                 <Icon name="Play" size={20} className="mr-2" />
-                Посмотреть демо
+                Посмотреть тарифы
               </Button>
             </div>
           </div>
@@ -142,7 +160,7 @@ const Index = () => {
           </div>
         </section>
 
-        <section className="container mx-auto px-6 py-20">
+        <section id="pricing-section" className="container mx-auto px-6 py-20">
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
               Выберите свой тариф
@@ -200,6 +218,10 @@ const Index = () => {
                         : ''
                     }`}
                     variant={plan.name === 'Free' ? 'outline' : 'default'}
+                    onClick={() => {
+                      setSelectedPlan({ type: plan.name, price: plan.price });
+                      setOrderDialogOpen(true);
+                    }}
                   >
                     <Icon name="ArrowRight" size={18} className="mr-2" />
                     {plan.name === 'Free' ? 'Начать бесплатно' : 'Выбрать тариф'}
@@ -277,11 +299,17 @@ const Index = () => {
                 по настройке и управлению сервером
               </p>
               <div className="flex flex-wrap gap-4 justify-center">
-                <Button className="bg-accent hover:bg-accent/90 glow-blue">
+                <Button 
+                  className="bg-accent hover:bg-accent/90 glow-blue"
+                  onClick={() => window.open('https://t.me/lordhost_support', '_blank')}
+                >
                   <Icon name="MessageCircle" size={18} className="mr-2" />
                   Открыть чат
                 </Button>
-                <Button variant="outline">
+                <Button 
+                  variant="outline"
+                  onClick={() => window.location.href = 'mailto:support@lordhost.ru'}
+                >
                   <Icon name="Mail" size={18} className="mr-2" />
                   Написать email
                 </Button>
@@ -306,6 +334,13 @@ const Index = () => {
           </div>
         </div>
       </footer>
+
+      <OrderDialog
+        open={orderDialogOpen}
+        onOpenChange={setOrderDialogOpen}
+        planType={selectedPlan.type}
+        basePrice={selectedPlan.price}
+      />
     </div>
   );
 };
